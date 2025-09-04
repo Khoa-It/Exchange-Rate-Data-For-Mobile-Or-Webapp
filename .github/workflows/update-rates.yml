@@ -1,0 +1,26 @@
+name: Update Exchange Rate JSON
+
+on:
+  schedule:
+    - cron: "5 7 * * *"   # 07:05 UTC mỗi ngày (14:05 VN) - đến sau cron Worker 5 phút
+  workflow_dispatch:       # cho phép bấm Run workflow để chạy tay khi test
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # cho phép push bằng GITHUB_TOKEN mặc định
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch latest rates from Worker
+        run: curl -s https://ndk-cache-exchange-rate.nguyendangyukhoa01.workers.dev/ -o exchange-rate.json
+
+      - name: Commit and push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add exchange-rate.json
+          git commit -m "Update exchange-rate.json [skip ci]" || echo "No changes to commit"
+          git push
